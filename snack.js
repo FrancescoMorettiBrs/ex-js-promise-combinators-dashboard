@@ -35,8 +35,11 @@ async function getDashboardData(query) {
     console.log(airportPromise);
 
     const promises = [destinationPromise, weatherPromise, airportPromise];
-    const [destination, weather, airport] = await Promise.all(promises);
-    console.log([destination, weather, airport]);
+    const [destinations, weathers, airports] = await Promise.all(promises);
+
+    const destination = destinations[0];
+    const weather = weathers[0];
+    const airport = airports[0];
     // OPPURE
     //   const results = await Promise.all(promises)
     //   const destinations = results[0]
@@ -44,11 +47,11 @@ async function getDashboardData(query) {
     //   const airport = results[2]
 
     return {
-      city: destination[0].name,
-      country: destination[0].country,
-      temperature: weather[0].temperature,
-      weather: weather[0].weather_description,
-      airport: airport[0].name,
+      city: destination ? destination.name : null, 
+      country: destination ? destination.country : null,
+      temperature: weather ? weather.temperature : null,
+      weather: weather ? weather.weather_description : null,
+      airport: airport ? airport.name : null,
     };
   } catch (error) {
     throw new Error(`Errore nel recupero dei dati: ${error.message}`);
@@ -58,6 +61,27 @@ async function getDashboardData(query) {
 getDashboardData("london")
   .then((data) => {
     console.log("Dasboard data:", data);
-    console.log(`${data.city} is in ${data.country}.\n` + `Today there are ${data.temperature} degrees and the weather is ${data.weather}.\n` + `The main airport is ${data.airport}.\n`);
+    let frase = "";
+    if (data.city !== null && data.country !== null) {
+      frase += `${data.city} is in ${data.country}.\n`;
+    }
+    if (data.temperature !== null && data.weather !== null) {
+      frase += `Today there are ${data.temperature} degrees and the weather is ${data.weather}.\n`;
+    }
+    if (data.airport !== null) {
+      frase += `The main airport is ${data.airport}.\n`;
+    }
+    console.log(frase);
   })
   .catch((error) => console.error(error));
+  
+// 🎯  Bonus 1 - Risultato vuoto
+// Se l’array di ricerca è vuoto, invece di far fallire l'intera funzione, semplicemente i dati relativi a quella chiamata verranno settati a null e  la frase relativa non viene stampata. Testa la funzione con la query “vienna” (non trova il meteo).
+
+// 🎯 Bonus 2 - Chiamate fallite
+// Attualmente, se una delle chiamate fallisce, **Promise.all()** rigetta l'intera operazione.
+
+// Modifica `getDashboardData()` per usare **Promise.allSettled()**, in modo che:
+// Se una chiamata fallisce, i dati relativi a quella chiamata verranno settati a null.
+// Stampa in console un messaggio di errore per ogni richiesta fallita.
+// Testa la funzione con un link fittizio per il meteo (es. https://www.meteofittizio.it)
